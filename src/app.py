@@ -5,7 +5,7 @@ A super simple FastAPI application that allows students to view and sign up
 for extracurricular activities at Mergington High School.
 """
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 import os
@@ -125,11 +125,3 @@ def signup_for_activity(activity_name: str, email: str):
    # Add student
    activity["participants"].append(email)
    return {"message": f"Signed up {email} for {activity_name}"}
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    print(f"Request: {request.method} {request.url}")
-    print(f"Headers: {request.headers}")
-    response = await call_next(request)
-    print(f"Response status: {response.status_code}")
-    return response
