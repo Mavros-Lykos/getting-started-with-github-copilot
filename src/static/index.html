@@ -23,9 +23,9 @@
             <p><strong>Schedule:</strong> Fridays, 3:30 PM - 5:00 PM</p>
             <p><strong>Max Participants:</strong> 12</p>
             <p><strong>Participants:</strong></p>
-            <ul>
-              <li>michael@mergington.edu</li>
-              <li>daniel@mergington.edu</li>
+            <ul style="list-style-type: none;">
+              <li>michael@mergington.edu <button class='delete-btn' data-participant='michael@mergington.edu'>❌</button></li>
+              <li>daniel@mergington.edu <button class='delete-btn' data-participant='daniel@mergington.edu'>❌</button></li>
             </ul>
           </div>
           <!-- Activities will be loaded here -->
@@ -91,8 +91,8 @@
               <p><strong>Schedule:</strong> ${details.schedule}</p>
               <p><strong>Max Participants:</strong> ${details.max_participants}</p>
               <p><strong>Participants:</strong></p>
-              <ul>
-                ${details.participants.map(participant => `<li>${participant}</li>`).join("")}
+              <ul style="list-style-type: none;">
+                ${details.participants.map(participant => `<li>${participant} <button class='delete-btn' data-participant='${participant}'>❌</button></li>`).join("")}
               </ul>
             `;
 
