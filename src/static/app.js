@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Create activity card
         const card = document.createElement("div");
         card.className = "activity-card";
+        card.setAttribute("data-activity-id", details.id);
 
         card.innerHTML = `
           <h4>${name}</h4>
@@ -91,6 +92,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+
+        // Dynamically update the participant list
+        const activityCard = document.querySelector(`[data-activity-id='${activity}']`);
+        if (activityCard) {
+          const participantList = activityCard.querySelector("ul");
+          const newParticipant = document.createElement("li");
+          newParticipant.innerHTML = `${email} <button class='delete-btn' data-participant='${email}'>❌</button>`;
+          participantList.appendChild(newParticipant);
+
+          // Add event listener to the new delete button
+          newParticipant.querySelector(".delete-btn").addEventListener("click", (event) => {
+            unregisterParticipant(activity, email);
+          });
+        }
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
