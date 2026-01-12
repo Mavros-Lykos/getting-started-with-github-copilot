@@ -1,43 +1,73 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const activitiesList = document.getElementById("activities-list");
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
 
+  // Check if elements exist
+  if (!activitiesList || !activitySelect) {
+    console.error("Required DOM elements not found.");
+    return;
+  }
+
   // Function to fetch activities from API
   async function fetchActivities() {
     try {
       const response = await fetch("/activities");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch activities: ${response.statusText}`);
+      }
+
       const activities = await response.json();
 
-      // Clear loading message
+      // Clear existing content
       activitiesList.innerHTML = "";
+      activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
 
-      // Populate activities list
-      Object.entries(activities).forEach(([name, details]) => {
-        const activityCard = document.createElement("div");
-        activityCard.className = "activity-card";
+      // Populate activities
+      for (const [name, details] of Object.entries(activities)) {
+        // Create activity card
+        const card = document.createElement("div");
+        card.className = "activity-card";
+        card.setAttribute("data-activity-id", details.id);
 
-        const spotsLeft = details.max_participants - details.participants.length;
-
-        activityCard.innerHTML = `
+        card.innerHTML = `
           <h4>${name}</h4>
-          <p>${details.description}</p>
+          <p><strong>Description:</strong> ${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
-          <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <p><strong>Max Participants:</strong> ${details.max_participants}</p>
+          <p><strong>Participants:</strong></p>
+          <ul style="list-style-type: none;">
+            ${details.participants.map(participant => `<li>${participant} <button class='delete-btn' data-participant='${participant}'>❌</button></li>`).join("")}
+          </ul>
         `;
 
-        activitiesList.appendChild(activityCard);
+        activitiesList.appendChild(card);
 
-        // Add option to select dropdown
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        activitySelect.appendChild(option);
-      });
+        // Add event listener for delete buttons
+        card.querySelectorAll('.delete-btn').forEach(button => {
+          button.addEventListener('click', (event) => {
+            const participant = event.target.dataset.participant;
+            unregisterParticipant(details.id, participant);
+          });
+        });
+
+        function unregisterParticipant(activityId, participant) {
+          fetch(`/activities/${activityId}/participants/${encodeURIComponent(participant)}`, {
+            method: 'DELETE'
+          })
+          .then(response => {
+            if (response.ok) {
+              event.target.parentElement.remove();
+            } else {
+              console.error('Failed to unregister participant');
+            }
+          });
+        }
+      }
     } catch (error) {
-      activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
-      console.error("Error fetching activities:", error);
+      console.error(error);
+      activitiesList.innerHTML = `<p class="error">Failed to load activities. Please try again later.</p>`;
     }
   }
 
@@ -62,6 +92,20 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+
+        // Dynamically update the participant list
+        const activityCard = document.querySelector(`[data-activity-id='${activity}']`);
+        if (activityCard) {
+          const participantList = activityCard.querySelector("ul");
+          const newParticipant = document.createElement("li");
+          newParticipant.innerHTML = `${email} <button class='delete-btn' data-participant='${email}'>❌</button>`;
+          participantList.appendChild(newParticipant);
+
+          // Add event listener to the new delete button
+          newParticipant.querySelector(".delete-btn").addEventListener("click", (event) => {
+            unregisterParticipant(activity, email);
+          });
+        }
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
